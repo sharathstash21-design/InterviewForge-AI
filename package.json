@@ -1,0 +1,17 @@
+{
+  "name": "interviewforge-ai",
+  "version": "1.0.0",
+  "description": "AI Mock Interview Coach using Gemini API + Google Sheets API",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest test.js --verbose"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "keywords": ["gemini", "interview", "ai", "google", "hackathon"],
+  "license": "MIT"
+}
