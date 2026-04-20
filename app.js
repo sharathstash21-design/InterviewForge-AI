@@ -14,7 +14,9 @@ const state = {
   currentIndex: 0,
   answers: [],
   scores: [],
+  scores: [],
   feedbacks: [],
+  isDemo: false,
 };
 
 // ─── DOM helpers ──────────────────────────────────────────
@@ -27,13 +29,13 @@ function getApiKey() {
   let key = sessionStorage.getItem("if_gemini_key") || CONFIG.GEMINI_API_KEY;
   if (!key) {
     key = prompt(
-      "Enter your Gemini API key (get it free at aistudio.google.com):\n\nYour key is stored only in this browser session."
+      "Enter your Gemini API key to use live AI\n(OR leave blank to use Demo Mode with mock data):"
     );
     if (key && key.trim()) {
       sessionStorage.setItem("if_gemini_key", key.trim());
     }
   }
-  return key ? key.trim() : null;
+  return key ? key.trim() : "demo";
 }
 
 // ─── Gemini API call ──────────────────────────────────────
@@ -66,6 +68,19 @@ async function callGemini(prompt, streaming = false) {
 
 // ─── Generate all questions upfront ───────────────────────
 async function generateQuestions() {
+  if (state.isDemo) {
+    const mockQuestions = [
+      "Can you explain the difference between REST and GraphQL with a real-world example?",
+      "What approaches do you take for state management in large frontend applications?",
+      "Describe a difficult technical bug you solved recently and your debugging process.",
+      "How do you optimize a web application for maximum performance and fast load times?",
+      "Explain the concept of Closure in JavaScript and provide a common use-case.",
+      "How do you approach ensuring your web application is fully accessible (WCAG compliant)?",
+      "Explain the Virtual DOM and how it improves application performance."
+    ];
+    return new Promise((resolve) => setTimeout(() => resolve(mockQuestions.slice(0, state.numQuestions)), 1500));
+  }
+
   const prompt = `You are an expert technical interviewer.
 Generate exactly ${state.numQuestions} interview questions for a ${state.experience}-level ${state.role} position.
 Language: ${state.language}.
@@ -88,6 +103,15 @@ Rules:
 
 // ─── Score a single answer ─────────────────────────────────
 async function scoreAnswer(question, answer) {
+  if (state.isDemo) {
+    return new Promise((resolve) => setTimeout(() => resolve({
+      score: answer.length > 30 ? 85 : 45,
+      strengths: "You provided a straight-forward answer touching on the basic concepts.",
+      improvements: "Try to add more technical depth and specific examples from your past projects.",
+      sample: "A comprehensive answer would start with the definition, followed by trade-offs, and conclude with a specific real-world example."
+    }), 2000));
+  }
+
   const prompt = `You are a strict but fair technical interviewer evaluating a candidate's answer.
 
 Role: ${state.role} (${state.experience} level)
@@ -139,9 +163,9 @@ async function startInterview() {
   }
 
   const key = getApiKey();
-  if (!key) { alert("A Gemini API key is required to use InterviewForge."); return; }
+  state.isDemo = (key === "demo");
+  state.apiKey = state.isDemo ? "demo_key" : key;
 
-  state.apiKey = key;
   state.role = role;
   state.experience = $("experience").value;
   state.numQuestions = parseInt($("num-questions").value);
